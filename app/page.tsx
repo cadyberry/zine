@@ -279,7 +279,7 @@ export default function ZineBuilder() {
     <div style={{ display: "grid", gridTemplateColumns: "270px 1fr", gridTemplateRows: "48px 1fr 72px", height: "100vh", fontFamily: "'Courier New', monospace", background: "#1c1a18", color: "#f0ebe0" }}>
 
       {/* TOPBAR */}
-      <div style={{ gridColumn: "1/-1", background: "#111", borderBottom: `1px solid ${border}`, display: "flex", alignItems: "center", padding: "0 1rem", gap: "1.5rem" }}>
+      <div data-noprint style={{ gridColumn: "1/-1", background: "#111", borderBottom: `1px solid ${border}`, display: "flex", alignItems: "center", padding: "0 1rem", gap: "1.5rem" }}>
         <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.25em", textTransform: "uppercase" }}>ZINE</span>
         <div style={{ width: 1, height: 20, background: border }} />
         <span style={{ fontSize: 9, letterSpacing: "0.12em", color: "rgba(240,235,224,0.28)", textTransform: "uppercase" }}>
@@ -294,7 +294,7 @@ export default function ZineBuilder() {
       </div>
 
       {/* SIDEBAR */}
-      <div style={{ background: "#161412", borderRight: `1px solid ${border}`, overflowY: "auto", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "1.4rem" }}>
+      <div data-noprint style={{ background: "#161412", borderRight: `1px solid ${border}`, overflowY: "auto", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "1.4rem" }}>
 
         {/* Layout */}
         <div>
@@ -386,19 +386,19 @@ export default function ZineBuilder() {
       </div>
 
       {/* CANVAS */}
-      <div style={{
+      <div data-canvas style={{
         overflow: "auto", display: "flex", alignItems: "center", justifyContent: "center",
         background: "#2a2825",
         backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.025) 1px, transparent 0)",
         backgroundSize: "40px 40px", padding: "2rem",
       }}>
         {/* All pages mounted, only current visible — preserves contenteditable content */}
-        <div style={{ position: "relative" }}>
+        <div data-pages-container style={{ position: "relative" }}>
           {pages.map(p => {
             const Layout = LAYOUT_COMPONENTS[p.template];
             return (
-              <div key={p.id} style={{ display: p.id === current ? "block" : "none" }}>
-                <div style={{
+              <div key={p.id} data-page-wrapper style={{ display: p.id === current ? "block" : "none" }}>
+                <div data-zine-page style={{
                   width: 400, height: 566, background: paperBg(p.texture),
                   position: "relative", flexShrink: 0,
                   boxShadow: "0 8px 60px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4)",
@@ -414,7 +414,7 @@ export default function ZineBuilder() {
       </div>
 
       {/* PAGE STRIP */}
-      <div style={{ gridColumn: "1/-1", background: "#111", borderTop: `1px solid ${border}`, display: "flex", alignItems: "center", padding: "0 1rem", gap: "0.75rem", overflowX: "auto" }}>
+      <div data-noprint style={{ gridColumn: "1/-1", background: "#111", borderTop: `1px solid ${border}`, display: "flex", alignItems: "center", padding: "0 1rem", gap: "0.75rem", overflowX: "auto" }}>
         {pages.map((p, idx) => (
           <div key={p.id} onClick={() => setCurrent(p.id)}
             style={{ position: "relative", flexShrink: 0 }}>
@@ -451,12 +451,60 @@ export default function ZineBuilder() {
       </div>
 
       <style>{`
-        @media print {
-          body > div { display: block !important; height: auto !important; }
-        }
         [data-ph]:empty::before { content: attr(data-ph); opacity: 0.22; font-style: italic; pointer-events: none; }
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+        @media print {
+          /* One print page = one zine page, no margins */
+          @page { size: 400px 566px; margin: 0; }
+
+          /* Force exact color reproduction */
+          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+          /* Hide all UI chrome */
+          [data-noprint] { display: none !important; }
+
+          /* Reset the app grid to a plain block */
+          body, html { margin: 0; padding: 0; background: white; }
+          body > div { display: block !important; height: auto !important; width: 400px !important; }
+
+          /* Canvas becomes a plain container */
+          [data-canvas] {
+            display: block !important;
+            background: none !important;
+            padding: 0 !important;
+            overflow: visible !important;
+            width: 400px !important;
+            height: auto !important;
+          }
+
+          [data-pages-container] {
+            position: static !important;
+            width: 400px;
+          }
+
+          /* Show ALL pages during print */
+          [data-page-wrapper] {
+            display: block !important;
+            width: 400px;
+            height: 566px;
+            overflow: hidden;
+            page-break-after: always;
+            break-after: page;
+          }
+          [data-page-wrapper]:last-child {
+            page-break-after: avoid;
+            break-after: avoid;
+          }
+
+          /* Zine page fills the print page exactly */
+          [data-zine-page] {
+            box-shadow: none !important;
+            width: 400px !important;
+            height: 566px !important;
+          }
+        }
       `}</style>
     </div>
   );
